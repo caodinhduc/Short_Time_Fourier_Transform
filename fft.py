@@ -25,30 +25,42 @@ def fft(x):
     return combined
 
 
-def ifft(X):
-    """ Inverse FFT of 1-d signals
-    call x = ifft(X) 
-    unpadding must be done implicitly
+def pad1(x, fft_size):
+    """ padding for 1d signal
+        Add zeros if fft_size is larger than x, else truncate
     """
-    x = fft([x.conjugate() for x in X])
-    return [x.conjugate()/len(X) for x in x]
+    m = x.shape[0]
+    if m >= fft_size:
+        return x[0: fft_size]
+    F = np.zeros(fft_size, dtype=x.dtype)
+    F[0: m] = x
+    return F
 
 
-def pad2(x, Nfft):
+def fft_1d(x, fft_size):
+    """ Fast Fourier Transfrom for 1d signal
+        fft_size is the length of FFT used
+    """
+    x = pad1(x, fft_size)
+    return np.array(fft(x))
     
-    """ pad zeros to x """
+    
+def pad2(x, fft_size):
+    
+    """ pad zeros to 2d signal """
     m, n = np.shape(x)
-    F = np.zeros((m, Nfft), dtype = x.dtype)
+    if n >= fft_size:
+        return x[0: m, 0: fft_size], m, fft_size
+    
+    F = np.zeros((m, fft_size), dtype = x.dtype)
     F[0:m, 0:n] = x
-    print(F.shape)
-    return F, m, Nfft
+    return F
 
 
-def fft2(f, Nfft=True):
-    """ FFT of 2d signals/images with padding
-    With each input len n, output len will be n + 1
-    usage X, m, n = fft2(x), where m and n are dimensions of original signal
+def fft_2d(x, fft_size):
+    """ FFT of 2d signals/images with fft_size
+    With fft_size is n, length of FFT used is n + 1
     """
-    f, m, n = pad2(f, Nfft)
-    result = [fft(a)[: int(n/2+1)] for a in f]
+    f = pad2(x, fft_size)
+    result = [fft(a)[: int(fft_size/2+1)] for a in f]
     return np.array(result)
